@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>外卖不会来</title>
+<style>
+  :root {
+    --brand: #ffd54d;
+    --brand-deep: #f2b807;
+    --price: #ff5339;
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1f2329;
+    --sub: #6b7177;
+    --line: #eceef0;
+    --green: #1caf7f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ---------- 页面容器 ---------- */
+  .screen {
+    position: fixed; inset: 0;
+    max-width: 480px; margin: 0 auto;
+    background: var(--bg);
+    display: none; flex-direction: column; overflow: hidden; z-index: 1;
+  }
+  .screen.active { display: flex; }
+
+  /* ---------- 通用头部 ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; background: var(--brand);
+    position: relative; z-index: 10;
+  }
+  .topbar .back {
+    width: 32px; height: 32px; border: none; background: none;
+    font-size: 22px; color: #333; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  }
+  .topbar .back:active { background: rgba(0,0,0,.08); }
+  .topbar .title { font-size: 17px; font-weight: 700; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---------- 首页：外卖点单 ---------- */
+  #home .topbar { background: var(--brand); }
+  .home-head { padding: 12px 14px; background: var(--brand); }
+  .loc-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; margin-bottom: 10px; }
+  .loc-row .loc { font-size: 17px; font-weight: 700; }
+  .loc-row .arrow { font-size: 10px; }
+  .search-box {
+    background: #fff; border-radius: 18px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 14px; font-size: 14px; color: #9aa1a8;
+  }
+  .search-box span { font-size: 15px; }
+
+  .home-nav {
+    display: flex; justify-content: space-around;
+    background: #fff; padding: 12px 0; border-bottom: 1px solid var(--line);
+  }
+  .nav-item { text-align: center; width: 20%; cursor: pointer; }
+  .nav-item .ic {
+    width: 46px; height: 46px; margin: 0 auto 6px;
+    border-radius: 14px; background: #f7f8fa;
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+  }
+  .nav-item .t { font-size: 12px; color: #333; }
+
+  .section-title { padding: 14px 14px 6px; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .section-title .badge { font-size: 10px; color: #999; font-weight: 400; }
+
+  .rest-card {
+    background: #fff; border-radius: 14px; margin: 8px 14px;
+    padding: 12px; display: flex; gap: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04); cursor: pointer;
+  }
+  .rest-card:active { transform: scale(.985); }
+  .rest-card .logo {
+    width: 64px; height: 64px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 34px;
+  }
+  .rest-card .info { flex: 1; min-width: 0; }
+  .rest-card .name { font-size: 16px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rest-card .meta { font-size: 12px; color: var(--sub); display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+  .rest-card .meta .rate { color: #ffa100; font-weight: 600; }
+  .rest-card .tags { display: flex; gap: 5px; }
+  .rest-card .tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 4px;
+    background: #f2f3f5; color: #777; border: 1px solid #eee;
+  }
+  .rest-card .coupon { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--price); margin-top: 5px; }
+  .coupon .chip {
+    background: #fff3ef; color: var(--price); border: 1px solid #ffd6cb;
+    padding: 2px 7px; border-radius: 3px; font-weight: 600;
+  }
+  .coupon .chip2 { color: #999; border: 1px solid #eee; background: #fff; font-weight: 400; }
+
+  .motto-banner {
+    margin: 12px 14px; padding: 12px 14px;
+    background: linear-gradient(135deg, #e8f7f0, #eefdf5);
+    border-radius: 12px; border: 1px solid #d3f0e2;
+    font-size: 13px; color: #0d7a55; line-height: 1.6;
+  }
+  .motto-banner .big { font-size: 15px; font-weight: 700; color: #08704b; }
+
+  /* ---------- 商家页 ---------- */
+  #shop .topbar { background: var(--brand); }
+  .shop-banner {
+    background: linear-gradient(135deg, #fff4d6, #ffe9b8);
+    padding: 14px; display: flex; gap: 12px; align-items: center;
+  }
+  .shop-banner .slogo {
+    width: 76px; height: 76px; border-radius: 16px;
+    background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    display: flex; align-items: center; justify-content: center; font-size: 40px;
+    flex-shrink: 0;
+  }
+  .shop-banner .sname { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .shop-banner .smeta { font-size: 12px; color: #8a7a3a; display: flex; gap: 10px; margin-bottom: 3px; flex-wrap: wrap; }
+  .shop-banner .scoupon { font-size: 11px; color: var(--price); background: #fff; border-radius: 4px; padding: 2px 8px; display: inline-block; }
+
+  .shop-tabs { display: flex; background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  .shop-tabs .tab { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; color: #555; position: relative; cursor: pointer; }
+  .shop-tabs .tab.active { color: var(--text); font-weight: 700; }
+  .shop-tabs .tab.active::after {
+    content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 24px; height: 3px; background: var(--brand-deep); border-radius: 2px;
+  }
+
+  .shop-main { flex: 1; overflow-y: auto; display: flex; }
+  .cat-list { width: 86px; background: #f4f5f7; overflow-y: auto; flex-shrink: 0; }
+  .cat-item { padding: 14px 8px; font-size: 12px; color: #666; text-align: center; border-left: 3px solid transparent; cursor: pointer; }
+  .cat-item.active { background: #fff; color: var(--text); font-weight: 700; border-left-color: var(--brand-deep); }
+
+  .dish-list { flex: 1; overflow-y: auto; background: #fff; padding: 6px 12px 120px; }
+  .cat-title { font-size: 14px; font-weight: 700; padding: 10px 0 6px; }
+  .dish {
+    display: flex; gap: 10px; padding: 10px 0;
+    border-bottom: 1px solid #f5f6f7; position: relative;
+  }
+  .dish:last-child { border-bottom: none; }
+  .dish .pic {
+    width: 66px; height: 66px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 34px;
+    background: #f7f8fa;
+  }
+  .dish .dinfo { flex: 1; min-width: 0; }
+  .dish .dname { font-size: 14px; font-weight: 600; }
+  .dish .ddesc { font-size: 11px; color: #9aa1a8; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dish .dsales { font-size: 11px; color: #9aa1a8; margin-top: 3px; }
+  .dish .dbottom { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+  .dish .dprice { font-size: 15px; font-weight: 700; color: var(--price); }
+  .dish .dprice small { font-size: 11px; font-weight: 400; }
+  .dish .dprice .kcal { font-size: 10px; color: #b9bfc6; font-weight: 400; margin-left: 4px; }
+
+  .stepper { display: flex; align-items: center; gap: 8px; }
+  .stepper .btn {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: none; font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform .1s;
+  }
+  .stepper .btn.add { background: var(--brand); color: #5a4500; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .stepper .btn.sub { background: #f2f3f5; color: #666; }
+  .stepper .btn:active { transform: scale(.9); }
+  .stepper .num { font-size: 14px; font-weight: 600; min-width: 16px; text-align: center; }
+
+  /* ---------- 购物车底部栏 ---------- */
+  .cart-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, #fff 70%, transparent);
+    z-index: 8;
+  }
+  .cart-inner {
+    display: flex; align-items: center; gap: 10px;
+    background: #1f2329; border-radius: 24px; padding: 6px 6px 6px 16px;
+    color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  }
+  .cart-ic { position: relative; font-size: 30px; line-height: 1; cursor: pointer; }
+  .cart-badge {
+    position: absolute; top: -6px; right: -8px;
+    background: var(--price); color: #fff; font-size: 10px;
+    min-width: 17px; height: 17px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; padding: 0 4px;
+  }
+  .cart-info { flex: 1; min-width: 0; }
+  .cart-info .total { font-size: 17px; font-weight: 700; }
+  .cart-info .total small { font-size: 11px; font-weight: 400; }
+  .cart-info .desc { font-size: 10px; color: #aab0b7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cart-btn {
+    background: var(--brand); color: #5a4500;
+    border: none; border-radius: 20px;
+    padding: 10px 20px; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .cart-btn:disabled { background: #3a3f45; color: #9aa1a8; }
+
+  /* ---------- 购物车页 ---------- */
+  #cart .topbar { background: var(--brand); }
+  .cart-list-wrap { flex: 1; overflow-y: auto; padding: 12px 0 100px; }
+  .cart-row {
+    background: #fff; margin: 0 12px 10px; border-radius: 12px;
+    padding: 12px; display: flex; align-items: center; gap: 12px;
+  }
+  .cart-row .pic { width: 50px; height: 50px; border-radius: 10px; background: #f7f8fa; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+  .cart-row .ci { flex: 1; min-width: 0; }
+  .cart-row .cn { font-size: 14px; font-weight: 600; }
+  .cart-row .rest-chip {
+    font-size: 10px; color: #999; background: #f5f6f7;
+    border-radius: 4px; padding: 1px 6px; display: inline-block; margin-left: 6px;
+  }
+  .cart-row .cp { font-size: 13px; color: var(--price); font-weight: 600; margin-top: 2px; }
+  .cart-row .ck { font-size: 10px; color: #b9bfc6; }
+  .cart-empty { text-align: center; padding: 80px 0; color: #b9bfc6; }
+  .cart-empty .big { font-size: 60px; margin-bottom: 12px; }
+  .cart-empty .t { font-size: 14px; }
+
+  /* ---------- 结算页 ---------- */
+  #checkout .topbar { background: var(--brand); }
+  .ck-body { flex: 1; overflow-y: auto; padding: 12px 0 20px; }
+  .ck-card { background: #fff; border-radius: 12px; margin: 0 12px 12px; padding: 14px; }
+  .ck-card h3 { font-size: 13px; color: var(--sub); margin-bottom: 10px; font-weight: 600; }
+  .ck-addr { display: flex; align-items: center; gap: 10px; }
+  .ck-addr .ic { font-size: 22px; }
+  .ck-addr .name { font-size: 15px; font-weight: 700; }
+  .ck-addr .addr { font-size: 12px; color: var(--sub); margin-top: 2px; }
+  .ck-addr .edit { margin-left: auto; color: #c0c6cc; font-size: 14px; }
+
+  .ck-item { display: flex; align-items: center; padding: 8px 0; font-size: 13px; }
+  .ck-item .em { font-size: 20px; margin-right: 8px; }
+  .ck-item .n { flex: 1; }
+  .ck-item .x { color: #9aa1a8; margin-right: 10px; }
+  .ck-item .p { color: var(--price); font-weight: 600; }
+
+  .ck-line { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; color: #555; }
+  .ck-line .v { font-weight: 600; color: var(--text); }
+  .ck-line .v.red { color: var(--price); }
+  .ck-line.total { font-size: 15px; font-weight: 700; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 12px; }
+  .ck-line.total .v { color: var(--price); font-size: 20px; }
+
+  .pay-bar {
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: #fff; border-top: 1px solid var(--line);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .pay-bar .total { font-size: 14px; color: #555; flex: 1; }
+  .pay-bar .total .num { font-size: 22px; font-weight: 800; color: var(--price); }
+  .pay-btn {
+    background: #1caf7f; color: #fff; border: none;
+    border-radius: 22px; padding: 12px 34px; font-size: 16px; font-weight: 700; cursor: pointer;
+  }
+  .pay-btn:active { transform: scale(.97); }
+
+  /* ---------- 惊喜页（拒绝配送） ---------- */
+  #surprise { background: linear-gradient(160deg, #0f3b2c 0%, #1caf7f 120%); justify-content: center; align-items: center; padding: 24px; }
+  .sur-inner { text-align: center; color: #fff; width: 100%; max-width: 400px; }
+  .sur-bike {
+    width: 110px; height: 110px; margin: 0 auto 18px;
+    background: rgba(255,255,255,.12); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 56px; position: relative;
+    animation: wobble 2.4s ease-in-out infinite;
+  }
+  @keyframes wobble {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    25% { transform: translateX(-6px) rotate(-3deg); }
+    75% { transform: translateX(6px) rotate(3deg); }
+  }
+  .sur-x {
+    position: absolute; top: 8px; right: 12px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--price); color: #fff;
+    font-size: 18px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    animation: pop .5s ease-out;
+  }
+  @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+  .sur-title { font-size: 26px; font-weight: 900; margin-bottom: 6px; letter-spacing: 1px; }
+  .sur-sub { font-size: 15px; opacity: .9; margin-bottom: 20px; }
+  .sur-msg {
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 16px; padding: 18px 16px;
+    font-size: 15px; line-height: 1.8; margin-bottom: 16px;
+    backdrop-filter: blur(4px);
+  }
+  .sur-msg .hl { font-weight: 800; }
+  .sur-stats { display: flex; gap: 10px; margin-bottom: 20px; }
+  .sur-stat {
+    flex: 1; background: rgba(0,0,0,.18); border-radius: 14px; padding: 12px 6px;
+  }
+  .sur-stat .num { font-size: 22px; font-weight: 900; }
+  .sur-stat .lbl { font-size: 11px; opacity: .8; margin-top: 2px; }
+  .sur-actions { display: flex; gap: 10px; }
+  .sur-btn {
+    flex: 1; border: none; border-radius: 24px; padding: 13px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .sur-btn.dash { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+  .sur-btn.again { background: #fff; color: #1caf7f; }
+  .sur-btn:active { transform: scale(.96); }
+
+  /* ---------- 看板页（坚持统计） ---------- */
+  #dash .topbar { background: #fff; }
+  .dash-hero {
+    background: linear-gradient(135deg, #1caf7f, #0f8f66);
+    color: #fff; padding: 24px 20px 30px; text-align: center;
+  }
+  .dash-hero .greet { font-size: 13px; opacity: .85; margin-bottom: 6px; }
+  .dash-hero .day { font-size: 44px; font-weight: 900; line-height: 1.1; }
+  .dash-hero .day small { font-size: 18px; font-weight: 600; opacity: .9; }
+  .dash-hero .quote { font-size: 12px; opacity: .8; margin-top: 8px; }
+  .dash-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    padding: 16px 14px;
+  }
+  .dash-card {
+    background: #fff; border-radius: 14px; padding: 16px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.05);
+  }
+  .dash-card .ic { font-size: 26px; margin-bottom: 8px; }
+  .dash-card .num { font-size: 28px; font-weight: 900; color: var(--green); }
+  .dash-card .num small { font-size: 13px; font-weight: 600; }
+  .dash-card .lbl { font-size: 12px; color: var(--sub); margin-top: 3px; }
+  .dash-card .sub2 { font-size: 11px; color: #b9bfc6; margin-top: 6px; }
+  .dash-wide { grid-column: 1 / -1; }
+  .dash-history { padding: 0 14px 40px; }
+  .dash-history h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .history-row {
+    background: #fff; border-radius: 10px; padding: 11px 12px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .history-row .hd { font-size: 11px; color: #b9bfc6; flex-shrink: 0; }
+  .history-row .ht { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-row .hc { color: var(--green); font-weight: 700; flex-shrink: 0; }
+  .reset-btn {
+    display: block; margin: 10px auto 0; padding: 8px 16px;
+    border: 1px solid #ddd; background: #fff; color: #999;
+    border-radius: 16px; font-size: 12px; cursor: pointer;
+  }
+  .dash-empty { text-align: center; color: #b9bfc6; padding: 40px 0; font-size: 13px; }
+  .dash-empty .big { font-size: 46px; margin-bottom: 10px; }
+
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: 100px; background: rgba(0,0,0,.8); color: #fff;
+    padding: 10px 20px; border-radius: 20px; font-size: 13px;
+    z-index: 100; opacity: 0; transition: opacity .3s; pointer-events: none;
+    max-width: 80vw; text-align: center;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ==================== 首页：外卖点单 ==================== -->
+<div class="screen active" id="home">
+  <div class="home-head">
+    <div class="loc-row">
+      <span>📍</span><span class="loc">减肥战士的家</span><span class="arrow">▾</span>
+    </div>
+    <div class="search-box"><span>🔍</span>搜索想吃的东西（不准点）</div>
+  </div>
+  <div class="home-nav" id="homeNav"></div>
+  <div class="section-title">附近高热美食 <span class="badge">共 6 家 · 全是陷阱</span></div>
+  <div id="restList"></div>
+  <div class="motto-banner">
+    <div class="big">🌱 温馨提示</div>
+    本平台所有订单均由「更好的自己」亲自配送。<br>
+    点单只是仪式感，坚持才是真本事。今天也要管住手哦 💪
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding: 4px 14px 30px; text-align:center; font-size:12px; color:#c0c6cc;">
+    没有骑手 · 没有真实店铺 · 只有看得见的意志力
+  </div>
+</div>
+
+<!-- ==================== 商家页 ==================== -->
+<div class="screen" id="shop">
+  <div class="topbar">
+    <button class="back" onclick="goHome()">‹</button>
+    <div class="title" id="shopTitle">店铺</div>
+  </div>
+  <div class="shop-banner" id="shopBanner"></div>
+  <div class="shop-tabs">
+    <div class="tab active">点菜</div>
+    <div class="tab" onclick="toast('评价区已被「克制」清空')">评价</div>
+    <div class="tab" onclick="toast('店铺介绍：一家不存在的店')">商家</div>
+  </div>
+  <div class="shop-main">
+    <div class="cat-list" id="catList"></div>
+    <div class="dish-list" id="dishList"></div>
+  </div>
+  <div class="cart-bar" id="cartBar">
+    <div class="cart-inner">
+      <div class="cart-ic" onclick="goCart()">🛒<span class="cart-badge" id="cartBadge">0</span></div>
+      <div class="cart-info">
+        <div class="total"><small>¥</small><span id="cartTotal">0</span></div>
+        <div class="desc" id="cartDesc">购物车是空的，真棒</div>
+      </div>
+      <button class="cart-btn" id="cartGo" disabled onclick="goCart()">去结算</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 购物车页 ==================== -->
+<div class="screen" id="cart">
+  <div class="topbar">
+    <button class="back" onclick="goShop()">‹</button>
+    <div class="title">购物车</div>
+  </div>
+  <div class="cart-list-wrap" id="cartList"></div>
+  <div class="cart-bar" style="position:relative;">
+    <div class="cart-inner">
+      <div class="cart-ic">🛒<span class="cart-badge" id="cartBadge2">0</span></div>
+      <div class="cart-info">
+        <div class="total"><small>¥</small><span id="cartTotal2">0</span></div>
+        <div class="desc" id="cartDesc2">购物车是空的，真棒</div>
+      </div>
+      <button class="cart-btn" id="cartGo2" disabled onclick="goCheckout()">去结算</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 结算页 ==================== -->
+<div class="screen" id="checkout">
+  <div class="topbar">
+    <button class="back" onclick="goCart()">‹</button>
+    <div class="title">确认订单</div>
+  </div>
+  <div class="ck-body">
+    <div class="ck-card">
+      <h3>配送至</h3>
+      <div class="ck-addr">
+        <div class="ic">📍</div>
+        <div>
+          <div class="name">减肥战士（你） <span style="font-size:11px;color:#9aa1a8;">138****6688</span></div>
+          <div class="addr">理智街 1 号 · 坚强公寓 1202 室</div>
+        </div>
+        <div class="edit">›</div>
+      </div>
+    </div>
+    <div class="ck-card" id="ckRestCard" style="display:none;">
+      <h3>来自店铺</h3>
+      <div id="ckRestList"></div>
+    </div>
+    <div class="ck-card">
+      <h3>商品清单</h3>
+      <div id="ckItems"></div>
+    </div>
+    <div class="ck-card">
+      <h3>费用明细</h3>
+      <div class="ck-line"><span>商品金额</span><span class="v" id="ckSubtotal">¥0</span></div>
+      <div class="ck-line"><span>配送费</span><span class="v" id="ckFee">¥0</span></div>
+      <div class="ck-line"><span>满减优惠</span><span class="v red" id="ckDisc">-¥0</span></div>
+      <div class="ck-line"><span>环保袋</span><span class="v">¥0</span></div>
+      <div class="ck-line total"><span>合计</span><span class="v" id="ckTotal">¥0</span></div>
+    </div>
+    <div class="ck-card" style="text-align:center; font-size:12px; color:#9aa1a8;">
+      💛 本单预计消耗你的意志力：<b style="color:var(--price);" id="ckWill">未知</b> 单位
+    </div>
+  </div>
+  <div class="pay-bar">
+    <div class="total">合计 <span class="num" id="payTotal">¥0</span></div>
+    <button class="pay-btn" onclick="submitOrder()">提交订单</button>
+  </div>
+</div>
+
+<!-- ==================== 惊喜页（拒绝配送） ==================== -->
+<div class="screen" id="surprise">
+  <div class="sur-inner">
+    <div class="sur-bike">
+      🛵
+      <div class="sur-x">✕</div>
+    </div>
+    <div class="sur-title">外卖不会来</div>
+    <div class="sur-sub">但更好的你，已经在路上了</div>
+    <div class="sur-msg" id="surMsg"></div>
+    <div class="sur-stats">
+      <div class="sur-stat"><div class="num" id="surKcal">0</div><div class="lbl">千卡已守住</div></div>
+      <div class="sur-stat"><div class="num" id="surMoney">¥0</div><div class="lbl">钱包已守住</div></div>
+      <div class="sur-stat"><div class="num" id="surStreak">0</div><div class="lbl">连续坚持天</div></div>
+    </div>
+    <div class="sur-actions">
+      <button class="sur-btn dash" onclick="goDash()">📊 看我的坚持</button>
+      <button class="sur-btn again" onclick="goHome()">🔄 换一家看看</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 看板页 ==================== -->
+<div class="screen" id="dash">
+  <div class="topbar">
+    <button class="back" onclick="goHome()">‹</button>
+    <div class="title">我的坚持</div>
+  </div>
+  <div class="dash-hero">
+    <div class="greet">已连续坚持</div>
+    <div class="day" id="dashDay">0 <small>天</small></div>
+    <div class="quote" id="dashQuote">每一次克制，都是写给未来的情书</div>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="ic">🛡️</div>
+      <div class="num" id="dashCount">0</div>
+      <div class="lbl">抵挡诱惑次数</div>
+      <div class="sub2" id="dashCountSub">点外卖没点成的次数</div>
+    </div>
+    <div class="dash-card">
+      <div class="ic">🔥</div>
+      <div class="num" id="dashKcal">0 <small>千卡</small></div>
+      <div class="lbl">累计守住热量</div>
+      <div class="sub2" id="dashKcalSub">≈ 绕操场 xx 圈</div>
+    </div>
+    <div class="dash-card">
+      <div class="ic">💰</div>
+      <div class="num" id="dashMoney">¥0</div>
+      <div class="lbl">累计守住钱包</div>
+      <div class="sub2">没花出去的钱，都是赚的</div>
+    </div>
+    <div class="dash-card">
+      <div class="ic">🏆</div>
+      <div class="num" id="dashBest">0 <small>天</small></div>
+      <div class="lbl">历史最长坚持</div>
+      <div class="sub2">最高纪录</div>
+    </div>
+    <div class="dash-card dash-wide">
+      <div class="ic">📅</div>
+      <div class="num" id="dashActive">0 <small>天</small></div>
+      <div class="lbl">累计坚持天数</div>
+      <div class="sub2">总共迈过了几个想吃夜宵的日子</div>
+    </div>
+  </div>
+  <div class="dash-history">
+    <h3>⏱ 最近战绩</h3>
+    <div id="dashHistory"></div>
+  </div>
+  <button class="reset-btn" onclick="resetAll()">重置所有记录（不建议）</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================== 店铺数据 ================== */
+const RESTAURANTS = [
+  {
+    id: 'fdc', name: '深夜放纵食堂（旗舰店）', short: '深夜放纵食堂', emoji: '🍔', bg: '#fff3e0',
+    rate: '4.8', sales: '9999+', time: '30分钟', fee: '¥0起送',
+    tags: ['高热警告', '脆皮诱惑', '糖油炸弹'],
+    coupons: ['满0减0', '新客立减¥0'],
+    menu: [
+      { cat: '招牌热销', emoji: '🔥', items: [
+        { name: '脆皮炸鸡全家桶', desc: '外酥里嫩，罪恶加倍', price: 39.9, kcal: 1860, emoji: '🍗' },
+        { name: '芝士瀑布汉堡', desc: '双层牛肉，芝士拉丝一臂长', price: 28.8, kcal: 1240, emoji: '🍔' },
+        { name: '蜂蜜黄油炸鸡', desc: '甜口党的深夜白月光', price: 25.9, kcal: 980, emoji: '🍯' }
+      ]},
+      { cat: '主食碳水', emoji: '🍚', items: [
+        { name: '深夜炒饭·加蛋', desc: '猛火快炒，锅气十足', price: 18.8, kcal: 760, emoji: '🍛' },
+        { name: '芝士焗饭', desc: '芝士就是力量，也是热量', price: 24.0, kcal: 890, emoji: '🧀' },
+        { name: '红烧牛肉面', desc: '汤浓肉烂，面多到你后悔', price: 22.0, kcal: 830, emoji: '🍜' },
+        { name: '螺蛳粉·加腐竹', desc: '臭味相投的快乐', price: 16.8, kcal: 720, emoji: '🍲' }
+      ]},
+      { cat: '炸物小食', emoji: '🍟', items: [
+        { name: '黄金薯条大份', desc: '盐焗香气，一口一个停不下来', price: 13.9, kcal: 580, emoji: '🍟' },
+        { name: '爆浆鸡排', desc: '一咬爆汁，眼泪从嘴角流', price: 15.9, kcal: 690, emoji: '🥩' },
+        { name: '洋葱圈', desc: '酥脆到掉渣', price: 12.9, kcal: 420, emoji: '🫠' },
+        { name: '盐酥鸡', desc: '台湾夜市同款，咸香上头', price: 14.5, kcal: 510, emoji: '🍢' }
+      ]},
+      { cat: '糖油甜品', emoji: '🍰', items: [
+        { name: '熔岩巧克力蛋糕', desc: '切开流心，热量爆表', price: 18.0, kcal: 780, emoji: '🍫' },
+        { name: '芒果千层', desc: '奶油层层叠叠，罪恶层层叠叠', price: 22.0, kcal: 560, emoji: '🥭' },
+        { name: '炸鲜奶', desc: '外脆里嫩，糖油混合体', price: 12.0, kcal: 480, emoji: '🍮' }
+      ]},
+      { cat: '肥宅快乐水', emoji: '🥤', items: [
+        { name: '冰可乐·大杯', desc: '气泡在舌尖跳舞', price: 6.5, kcal: 210, emoji: '🥤' },
+        { name: '大杯奶茶三兄弟', desc: '椰果布丁仙草全都要', price: 16.0, kcal: 720, emoji: '🧋' },
+        { name: '芋泥啵啵奶茶', desc: '芋泥控的快乐星球', price: 17.0, kcal: 690, emoji: '🍠' }
+      ]}
+    ]
+  },
+  {
+    id: 'milktea', name: '奶茶の暴击', short: '奶茶の暴击', emoji: '🧋', bg: '#fdf0e6',
+    rate: '4.9', sales: '8888+', time: '25分钟', fee: '¥3起送',
+    tags: ['全糖快乐', '三分糖是最后的倔强', '奶盖成瘾'],
+    coupons: ['满20减0', '第二杯半价（不存在的）'],
+    menu: [
+      { cat: '招牌奶茶', emoji: '🧋', items: [
+        { name: '珍珠奶茶·全糖', desc: '快乐加倍，糖分拉满', price: 15.0, kcal: 650, emoji: '🧋' },
+        { name: '波霸奶茶·双倍珍珠', desc: '每一口都是咀嚼的快乐', price: 18.0, kcal: 780, emoji: '🫘' },
+        { name: '焦糖布蕾奶茶', desc: '布蕾的温柔陷阱', price: 19.0, kcal: 720, emoji: '🍮' }
+      ]},
+      { cat: '鲜果茶', emoji: '🍹', items: [
+        { name: '满杯百香果', desc: '酸酸甜甜，假装健康', price: 16.0, kcal: 380, emoji: '🍹' },
+        { name: '多肉葡萄', desc: '葡萄果肉多到犯规', price: 20.0, kcal: 420, emoji: '🍇' },
+        { name: '杨枝甘露', desc: '芒果西柚椰浆三重暴击', price: 19.0, kcal: 560, emoji: '🥭' }
+      ]},
+      { cat: '芝士奶盖', emoji: '🧀', items: [
+        { name: '芝士奶盖绿茶', desc: '咸甜交织的丝滑', price: 17.0, kcal: 500, emoji: '🍵' },
+        { name: '芝士奶盖红茶', desc: '经典永不过时', price: 17.0, kcal: 520, emoji: '🧋' },
+        { name: '芝芝莓莓', desc: '草莓果肉撞上芝士', price: 22.0, kcal: 460, emoji: '🍓' }
+      ]},
+      { cat: '疯狂加料', emoji: '➕', items: [
+        { name: '加珍珠', desc: '嚼感加倍', price: 2.0, kcal: 80, emoji: '🫘' },
+        { name: '加椰果', desc: 'QQ弹弹', price: 2.0, kcal: 60, emoji: '🥥' },
+        { name: '加芋泥', desc: '绵密芋头香', price: 4.0, kcal: 120, emoji: '🍠' }
+      ]}
+    ]
+  },
+  {
+    id: 'hotpot', name: '翻滚吧火锅', short: '翻滚吧火锅', emoji: '🍲', bg: '#ffeceb',
+    rate: '4.7', sales: '6666+', time: '45分钟', fee: '¥6起送',
+    tags: ['牛油飘香', '到家即开涮', '锅底免费送'],
+    coupons: ['满50减0', '锅底免费（骗你的）'],
+    menu: [
+      { cat: '灵魂锅底', emoji: '🍲', items: [
+        { name: '牛油麻辣锅底', desc: '红油滚滚，辣到上头', price: 28.0, kcal: 900, emoji: '🌶️' },
+        { name: '番茄锅底', desc: '酸甜开胃，骗自己是健康的', price: 22.0, kcal: 350, emoji: '🍅' },
+        { name: '菌菇清汤锅底', desc: '养生借口一号', price: 18.0, kcal: 180, emoji: '🍄' }
+      ]},
+      { cat: '鲜切荤菜', emoji: '🥩', items: [
+        { name: '精品肥牛卷', desc: '一涮即熟，入口即化', price: 32.0, kcal: 780, emoji: '🥩' },
+        { name: '手切鲜羊肉', desc: '羊肉的膻香是灵魂', price: 35.0, kcal: 720, emoji: '🐑' },
+        { name: '大刀毛肚', desc: '七上八下，脆嫩爽口', price: 28.0, kcal: 210, emoji: '🫧' },
+        { name: '手打虾滑', desc: 'Q弹虾肉粒粒分明', price: 26.0, kcal: 180, emoji: '🦐' },
+        { name: '梅林午餐肉', desc: '火锅隐藏主角', price: 16.0, kcal: 520, emoji: '🥫' }
+      ]},
+      { cat: '清爽素菜', emoji: '🥬', items: [
+        { name: '金针菇', desc: '吸汤小能手', price: 8.0, kcal: 60, emoji: '🍄' },
+        { name: '娃娃菜', desc: '甜嫩解腻', price: 6.0, kcal: 40, emoji: '🥬' },
+        { name: '土豆片', desc: '软糯吸汁', price: 6.0, kcal: 140, emoji: '🥔' },
+        { name: '脆藕片', desc: '咔嚓一声很解压', price: 7.0, kcal: 90, emoji: '🪷' }
+      ]},
+      { cat: '灵魂蘸料', emoji: '🥜', items: [
+        { name: '麻酱蘸料', desc: '北方火锅的信仰', price: 4.0, kcal: 160, emoji: '🥜' },
+        { name: '香油蒜泥', desc: '油碟经典', price: 3.0, kcal: 120, emoji: '🧄' },
+        { name: '小米辣干碟', desc: '辣到流泪也要蘸', price: 2.0, kcal: 50, emoji: '🌶️' }
+      ]}
+    ]
+  },
+  {
+    id: 'chuan', name: '串串人间', short: '串串人间', emoji: '🍢', bg: '#fff6e6',
+    rate: '4.6', sales: '5555+', time: '35分钟', fee: '¥4起送',
+    tags: ['一撸到底', '麻辣鲜香', '数签签的快乐'],
+    coupons: ['满30减0', '串串100根起送（没有的事）'],
+    menu: [
+      { cat: '香辣荤串', emoji: '🥩', items: [
+        { name: '麻辣牛肉一把', desc: '辣油浸润，越嚼越香', price: 22.0, kcal: 380, emoji: '🥩' },
+        { name: '郡把一把抓', desc: '脆爽弹牙', price: 18.0, kcal: 320, emoji: '🍢' },
+        { name: '鸡脆骨一把', desc: '咔嚓咔嚓停不下', price: 20.0, kcal: 350, emoji: '🍗' },
+        { name: '冒脑花', desc: '软糯绵密，重口味顶配', price: 15.0, kcal: 280, emoji: '🧠' }
+      ]},
+      { cat: '清爽素串', emoji: '🥒', items: [
+        { name: '土豆片一把', desc: '吸满红油', price: 8.0, kcal: 120, emoji: '🥔' },
+        { name: '藕片一把', desc: '脆口解辣', price: 8.0, kcal: 90, emoji: '🪷' },
+        { name: '莴笋一把', desc: '清爽回甘', price: 6.0, kcal: 50, emoji: '🥒' },
+        { name: '苕皮一把', desc: '糯叽叽的快乐', price: 9.0, kcal: 160, emoji: '🍠' }
+      ]},
+      { cat: '主食收尾', emoji: '🥟', items: [
+        { name: '红油抄手', desc: '皮薄馅大', price: 14.0, kcal: 450, emoji: '🥟' },
+        { name: '手搓冰粉', desc: '红糖醪糟，解辣神器', price: 8.0, kcal: 180, emoji: '🍧' },
+        { name: '醪糟汤圆', desc: '甜糯收尾', price: 10.0, kcal: 240, emoji: '🍡' }
+      ]}
+    ]
+  },
+  {
+    id: 'dessert', name: '甜蜜陷阱甜品屋', short: '甜蜜陷阱', emoji: '🍰', bg: '#f3ecff',
+    rate: '4.9', sales: '7777+', time: '20分钟', fee: '¥2起送',
+    tags: ['甜到发齁', '颜值犯规', '吃一口胖三斤'],
+    coupons: ['满15减0', '买甜品送意志力（假的）'],
+    menu: [
+      { cat: '经典糖水', emoji: '🍮', items: [
+        { name: '杨枝甘露', desc: '芒果控的致命诱惑', price: 19.0, kcal: 560, emoji: '🥭' },
+        { name: '双皮奶', desc: '奶香浓郁，滑嫩如丝', price: 12.0, kcal: 220, emoji: '🥛' },
+        { name: '椰汁龟苓膏', desc: '苦中带甜，假装降火', price: 10.0, kcal: 120, emoji: '🐢' }
+      ]},
+      { cat: '网红爆款', emoji: '✨', items: [
+        { name: '芒果班戟', desc: '奶油爆浆的温柔', price: 18.0, kcal: 380, emoji: '🥭' },
+        { name: '草莓雪媚娘', desc: '软糯外皮裹着奶油', price: 15.0, kcal: 320, emoji: '🍓' },
+        { name: '榴莲千层', desc: '爱的爱死，恨的恨死', price: 26.0, kcal: 620, emoji: '🥭' }
+      ]},
+      { cat: '冰淇淋', emoji: '🍦', items: [
+        { name: '甜筒冰淇淋', desc: '夏天的快乐很简单', price: 6.0, kcal: 200, emoji: '🍦' },
+        { name: '暴风雪圣代', desc: '倒杯不洒的魔法', price: 12.0, kcal: 340, emoji: '🍨' },
+        { name: '绵绵冰·芒果味', desc: '入口即化的冰沙', price: 18.0, kcal: 280, emoji: '🍧' }
+      ]}
+    ]
+  },
+  {
+    id: 'cake', name: '蛋糕星球', short: '蛋糕星球', emoji: '🎂', bg: '#ffe9f1',
+    rate: '4.9', sales: '4444+', time: '50分钟', fee: '¥8起送',
+    tags: ['生日杀手', '奶油炸弹', '仪式感拉满'],
+    coupons: ['满100减0', '免费送生日帽（要它何用）'],
+    menu: [
+      { cat: '生日蛋糕', emoji: '🎂', items: [
+        { name: '6寸水果奶油蛋糕', desc: '生日标配，罪恶标配', price: 128.0, kcal: 2100, emoji: '🍓' },
+        { name: '8寸巧克力蛋糕', desc: '浓郁可可，快乐加倍', price: 168.0, kcal: 2800, emoji: '🍫' },
+        { name: '红丝绒蛋糕', desc: '颜值与热量并存', price: 158.0, kcal: 2600, emoji: '🎂' }
+      ]},
+      { cat: '切件蛋糕', emoji: '🍰', items: [
+        { name: '提拉米苏切件', desc: '咖啡香与奶香的缠绵', price: 22.0, kcal: 420, emoji: '☕' },
+        { name: '巴斯克芝士切件', desc: '焦香绵密', price: 20.0, kcal: 380, emoji: '🧀' },
+        { name: '抹茶红豆切件', desc: '微苦回甘', price: 18.0, kcal: 340, emoji: '🍵' }
+      ]},
+      { cat: '面包烘焙', emoji: '🥐', items: [
+        { name: '肉松小贝', desc: '咸香酥软，一个接一个', price: 12.0, kcal: 290, emoji: '🥯' },
+        { name: '葡式蛋挞', desc: '酥皮+蛋香的完美', price: 5.0, kcal: 180, emoji: '🥧' },
+        { name: '曲奇礼盒', desc: '黄油香飘满屋', price: 28.0, kcal: 900, emoji: '🍪' }
+      ]}
+    ]
+  }
+];
+
+/* ================== 文案体系 ================== */
+const MESSAGES = [
+  {
+    title: '骑手在半路想通了',
+    body: '骑手小哥看着订单，突然想起自己<hl>减肥三年</hl>的誓言，当场把外卖调头送给了路边流浪猫。<br><br>外卖不会来，但你的<hl>马甲线</hl>会来。'
+  },
+  {
+    title: '店铺今天打烊了',
+    body: '店铺老板看你是老熟人，含泪把单退了：<br>「你这样的人，<hl>不该吃这个</hl>。」<br><br>外卖不会来，但<hl>更轻的你自己</hl>会来。'
+  },
+  {
+    title: '配送失败·目标达成',
+    body: '这单外卖，其实早在你<hl>下单前的一瞬间</hl>就被你打败了。<br><br>你需要的从来不是这口快乐，而是<hl>战胜它的勇气</hl>。'
+  },
+  {
+    title: '商家超时未接单',
+    body: '不是商家不接单，是<hl>你的自律抢先接单</hl>了。<br><br>这顿饭很贵，贵到要用<hl>三天的努力</hl>来还。省下来，就是赚到。'
+  },
+  {
+    title: '骑手被好心情劫持',
+    body: '骑手本来要出发，结果看到你<hl>昨晚还在坚持运动</hl>，他决定不送这一单了。<br><br>外卖不会来，但<hl>健康的你</hl>正在赶来的路上。'
+  }
+];
+
+const QUOTES = [
+  '每一次克制，都是写给未来的情书',
+  '你忍住没点的每一顿，都在悄悄改命',
+  '不吃的这一口，是你对身体的温柔',
+  '管住嘴的夜晚，第二天都会感谢你',
+  '别人在吃宵夜，你在成为更好的人'
+];
+
+const HOME_NAV = [
+  { emoji: '🍔', label: '炸鸡' },
+  { emoji: '🧋', label: '奶茶' },
+  { emoji: '🍲', label: '火锅' },
+  { emoji: '🍢', label: '串串' },
+  { emoji: '🎂', label: '甜点' }
+];
+
+/* ================== 状态 ================== */
+let cart = {};          // key -> { dish, qty, rest }
+let currentRest = RESTAURANTS[0];
+let lastScreen = 'home';
+
+function restKey(restId, catIdx, idx) { return restId + '-' + catIdx + '-' + idx; }
+function findRest(id) { return RESTAURANTS.find(r => r.id === id); }
+
+/* ================== 统计持久化 ================== */
+function loadStats() {
+  try {
+    const s = localStorage.getItem('wmbhl_stats');
+    if (s) return JSON.parse(s);
+  } catch (e) {}
+  return { count: 0, kcal: 0, money: 0, days: [], best: 0, streak: 0, history: [] };
+}
+function saveStats(s) {
+  try { localStorage.setItem('wmbhl_stats', JSON.stringify(s)); } catch (e) {}
+}
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function updateStreak(s) {
+  const today = todayStr();
+  if (s.days.indexOf(today) < 0) {
+    s.days.push(today);
+    const d = new Date(); d.setDate(d.getDate()-1);
+    const y = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    s.streak = (s.days.indexOf(y) >= 0) ? s.streak + 1 : 1;
+  }
+  s.best = Math.max(s.best, s.streak);
+}
+
+/* ================== 屏幕切换 ================== */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'cart') renderCart();
+  if (id === 'checkout') renderCheckout();
+  if (id === 'dash') renderDash();
+  lastScreen = id;
+}
+function goHome() { renderHome(); show('home'); }
+function goShop(restId) {
+  if (restId) currentRest = findRest(restId);
+  renderShop();
+  show('shop');
+}
+function goCart() {
+  if (totalCount() === 0) { toast('购物车空空如也，先去「冷静」一下'); return; }
+  renderCart();
+  show('cart');
+}
+function goCheckout() { renderCheckout(); show('checkout'); }
+function goDash() { show('dash'); }
+
+/* ================== 首页渲染 ================== */
+function renderHome() {
+  const nav = document.getElementById('homeNav');
+  nav.innerHTML = '';
+  HOME_NAV.forEach((n, i) => {
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.innerHTML = `<div class="ic">${n.emoji}</div><div class="t">${n.label}</div>`;
+    item.onclick = () => goShop(RESTAURANTS[i].id);
+    nav.appendChild(item);
+  });
+
+  const list = document.getElementById('restList');
+  list.innerHTML = '';
+  RESTAURANTS.forEach((r, i) => {
+    const card = document.createElement('div');
+    card.className = 'rest-card';
+    card.innerHTML = `
+      <div class="logo" style="background:${r.bg}">${r.emoji}</div>
+      <div class="info">
+        <div class="name">${r.name}</div>
+        <div class="meta">
+          <span class="rate">★ ${r.rate}</span>
+          <span>月售 ${r.sales}</span>
+          <span>${r.time}</span><span>${r.fee}</span>
+        </div>
+        <div class="tags">${r.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        <div class="coupon">
+          ${r.coupons.map((c, j) => `<span class="chip${j > 0 ? ' chip2' : ''}">${c}</span>`).join('')}
+        </div>
+      </div>`;
+    card.onclick = () => goShop(r.id);
+    list.appendChild(card);
+  });
+}
+
+/* ================== 商家页渲染 ================== */
+function renderShop() {
+  const r = currentRest;
+  document.getElementById('shopTitle').textContent = r.short;
+  document.getElementById('shopBanner').innerHTML = `
+    <div class="slogo" style="background:${r.bg}">${r.emoji}</div>
+    <div>
+      <div class="sname">${r.name}</div>
+      <div class="smeta">
+        <span>★ ${r.rate}</span><span>月售${r.sales}</span><span>约${r.time}</span><span>${r.fee}</span>
+      </div>
+      <div class="scoupon">${r.coupons.join(' ｜ ')}</div>
+    </div>`;
+
+  const catList = document.getElementById('catList');
+  catList.innerHTML = '';
+  r.menu.forEach((c, i) => {
+    const d = document.createElement('div');
+    d.className = 'cat-item' + (i === 0 ? ' active' : '');
+    d.textContent = c.emoji + ' ' + c.cat;
+    d.onclick = () => selectCat(i);
+    catList.appendChild(d);
+  });
+  renderDishes(0);
+}
+
+function selectCat(i) {
+  document.querySelectorAll('.cat-item').forEach((el, idx) => el.classList.toggle('active', idx === i));
+  renderDishes(i);
+}
+
+function renderDishes(catIdx) {
+  const list = document.getElementById('dishList');
+  const c = currentRest.menu[catIdx];
+  list.innerHTML = '';
+  const title = document.createElement('div');
+  title.className = 'cat-title';
+  title.textContent = c.cat + '（点下去 · 都是陷阱）';
+  list.appendChild(title);
+  c.items.forEach((dish, idx) => {
+    const key = restKey(currentRest.id, catIdx, idx);
+    const row = document.createElement('div');
+    row.className = 'dish';
+    row.innerHTML = `
+      <div class="pic" style="background:${dishBg(dish.emoji)}">${dish.emoji}</div>
+      <div class="dinfo">
+        <div class="dname">${dish.name}</div>
+        <div class="ddesc">${dish.desc}</div>
+        <div class="dsales">月售 ${(Math.floor(Math.random()*900)+100)} 份 · 好评率 100%</div>
+        <div class="dbottom">
+          <div class="dprice"><small>¥</small>${dish.price.toFixed(1)}<span class="kcal">🔥${dish.kcal}千卡</span></div>
+          <div class="stepper">${stepperHTML(key)}</div>
+        </div>
+      </div>`;
+    list.appendChild(row);
+  });
+  const tip = document.createElement('div');
+  tip.style.cssText = 'margin-top:14px;background:#eefaf4;border:1px dashed #bfe8d5;border-radius:10px;padding:12px;font-size:12px;color:#0d7a55;line-height:1.7;';
+  tip.innerHTML = '🌿 悄悄告诉你：这一份的千卡，够你多跑一小时。但这里只有高热量。';
+  list.appendChild(tip);
+}
+
+function dishBg(emoji) {
+  const palettes = ['#fff3e0','#ffeef1','#eef7ff','#f0f6ec','#fef5e0','#f2ecff'];
+  let h = 0;
+  for (const ch of emoji) h += ch.codePointAt(0);
+  return palettes[h % palettes.length];
+}
+
+function stepperHTML(key) {
+  const q = cart[key] ? cart[key].qty : 0;
+  return `
+    <button class="btn sub" ${q === 0 ? 'style="visibility:hidden"' : ''} onclick="changeQty('${key}',-1)">−</button>
+    <span class="num" id="num_${key}">${q}</span>
+    <button class="btn add" onclick="changeQty('${key}',1)">＋</button>`;
+}
+
+function findDishByKey(key) {
+  const [rid, ci, ii] = key.split('-');
+  return findRest(rid).menu[Number(ci)].items[Number(ii)];
+}
+
+function changeQty(key, delta) {
+  if (!cart[key] && delta > 0) {
+    const dish = findDishByKey(key);
+    const rest = findRest(key.split('-')[0]);
+    cart[key] = { dish, qty: 0, rest };
+  }
+  if (cart[key]) {
+    cart[key].qty += delta;
+    if (cart[key].qty <= 0) delete cart[key];
+  }
+  const span = document.getElementById('num_' + key);
+  if (span) span.textContent = cart[key] ? cart[key].qty : 0;
+  refreshStepper(key);
+  updateCartBar();
+  if (totalCount() === 1 && delta > 0) toast('好的，你成功馋到了自己 😤');
+}
+
+function refreshStepper(key) {
+  const q = cart[key] ? cart[key].qty : 0;
+  const num = document.getElementById('num_' + key);
+  if (num) {
+    const row = num.closest('.dish');
+    if (row) {
+      const sub = row.querySelector('.btn.sub');
+      sub.style.visibility = q === 0 ? 'hidden' : 'visible';
+    }
+  }
+}
+
+/* ================== 购物车 ================== */
+function totalCount() {
+  return Object.values(cart).reduce((a, c) => a + c.qty, 0);
+}
+function cartTotal() {
+  return Object.values(cart).reduce((a, c) => a + c.qty * c.dish.price, 0);
+}
+function cartKcal() {
+  return Object.values(cart).reduce((a, c) => a + c.qty * c.dish.kcal, 0);
+}
+function cartRestCount() {
+  return new Set(Object.values(cart).map(c => c.rest.id)).size;
+}
+
+function updateCartBar() {
+  const n = totalCount();
+  const t = cartTotal();
+  const rst = cartRestCount();
+  const badge1 = document.getElementById('cartBadge');
+  const badge2 = document.getElementById('cartBadge2');
+  const total1 = document.getElementById('cartTotal');
+  const total2 = document.getElementById('cartTotal2');
+  const desc1 = document.getElementById('cartDesc');
+  const desc2 = document.getElementById('cartDesc2');
+  const btn1 = document.getElementById('cartGo');
+  const btn2 = document.getElementById('cartGo2');
+  badge1.textContent = n; badge2.textContent = n;
+  badge1.style.display = n === 0 ? 'none' : 'flex';
+  badge2.style.display = n === 0 ? 'none' : 'flex';
+  total1.textContent = t.toFixed(1);
+  total2.textContent = t.toFixed(1);
+  desc1.textContent = n === 0 ? '购物车是空的，真棒' : `已选 ${n} 件 · ${rst}家店 · 🔥${cartKcal()}千卡`;
+  desc2.textContent = n === 0 ? '购物车是空的，真棒' : `合计 ${cartKcal()} 千卡热量待消灭`;
+  btn1.disabled = n === 0;
+  btn2.disabled = n === 0;
+}
+
+function renderCart() {
+  const wrap = document.getElementById('cartList');
+  const keys = Object.keys(cart);
+  if (keys.length === 0) {
+    wrap.innerHTML = `<div class="cart-empty"><div class="big">🛒</div><div class="t">购物车空空如也<br>没有购买欲，就是最好的减脂餐</div></div>`;
+    updateCartBar();
+    return;
+  }
+  wrap.innerHTML = '';
+  keys.forEach(key => {
+    const c = cart[key];
+    const row = document.createElement('div');
+    row.className = 'cart-row';
+    row.innerHTML = `
+      <div class="pic" style="background:${c.rest.bg}">${c.dish.emoji}</div>
+      <div class="ci">
+        <div class="cn">${c.dish.name}<span class="rest-chip">${c.rest.short}</span></div>
+        <div class="ck">🔥${c.dish.kcal}千卡/份</div>
+        <div class="cp">¥${c.dish.price.toFixed(1)}</div>
+      </div>
+      <div class="stepper">
+        <button class="btn sub" onclick="changeQty('${key}',-1); renderCart();">−</button>
+        <span class="num">${c.qty}</span>
+        <button class="btn add" onclick="changeQty('${key}',1); renderCart();">＋</button>
+      </div>`;
+    wrap.appendChild(row);
+  });
+  updateCartBar();
+}
+
+/* ================== 结算页 ================== */
+function renderCheckout() {
+  if (totalCount() === 0) { goShop(); return; }
+  const keys = Object.keys(cart);
+
+  // 店铺清单
+  const restMap = {};
+  keys.forEach(key => {
+    const c = cart[key];
+    if (!restMap[c.rest.id]) restMap[c.rest.id] = { rest: c.rest, count: 0 };
+    restMap[c.rest.id].count += c.qty;
+  });
+  const restIds = Object.keys(restMap);
+  const restCard = document.getElementById('ckRestCard');
+  const restList = document.getElementById('ckRestList');
+  if (restIds.length > 1) {
+    restCard.style.display = '';
+    restList.innerHTML = '';
+    restIds.forEach(rid => {
+      const rm = restMap[rid];
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;';
+      div.innerHTML = `<span style="font-size:18px;">${rm.rest.emoji}</span><span style="flex:1;">${rm.rest.name}</span><span style="color:#999;">${rm.count}件</span>`;
+      restList.appendChild(div);
+    });
+  } else {
+    restCard.style.display = 'none';
+  }
+
+  // 商品清单
+  const items = document.getElementById('ckItems');
+  items.innerHTML = '';
+  keys.forEach(key => {
+    const c = cart[key];
+    const row = document.createElement('div');
+    row.className = 'ck-item';
+    row.innerHTML = `<span class="em">${c.dish.emoji}</span><span class="n">${c.dish.name}${restIds.length > 1 ? '<span style="font-size:10px;color:#999;">（' + c.rest.short + '）</span>' : ''}</span><span class="x">×${c.qty}</span><span class="p">¥${(c.qty*c.dish.price).toFixed(1)}</span>`;
+    items.appendChild(row);
+  });
+
+  // 费用
+  const sub = cartTotal();
+  const fee = 5.0;
+  const disc = Math.floor(sub / 30) * 3;
+  const total = Math.max(0, sub + fee - disc);
+  document.getElementById('ckSubtotal').textContent = '¥' + sub.toFixed(1);
+  document.getElementById('ckFee').textContent = '¥' + fee.toFixed(1);
+  document.getElementById('ckDisc').textContent = '-¥' + disc.toFixed(1);
+  document.getElementById('ckTotal').textContent = '¥' + total.toFixed(1);
+  document.getElementById('payTotal').textContent = '¥' + total.toFixed(1);
+  document.getElementById('ckWill').textContent = (Math.ceil(cartKcal()/100)) * 3 + ' 单位';
+}
+
+/* ================== 提交订单 -> 惊喜 ================== */
+function submitOrder() {
+  const kcal = cartKcal();
+  const money = cartTotal();
+  const itemCount = totalCount();
+  const restNames = [...new Set(Object.values(cart).map(c => c.rest.short))];
+  const msg = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+  document.getElementById('surMsg').innerHTML =
+    `<span style="font-size:13px;opacity:.75;">${msg.title}</span><br><br>` + msg.body.replace(/<hl>/g, '<span class="hl">').replace(/<\/hl>/g, '</span>');
+
+  const s = loadStats();
+  s.count += 1;
+  s.kcal += kcal;
+  s.money += money;
+  updateStreak(s);
+  const now = new Date();
+  const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  const restText = restNames.length > 1 ? '等 ' + restNames.length + ' 家店' : '的「' + restNames[0] + '」';
+  s.history.unshift({ time: todayStr() + ' ' + timeStr, text: '抵挡了 ' + itemCount + ' 件' + restText + ' 的诱惑', kcal: kcal, money: money });
+  if (s.history.length > 30) s.history.length = 30;
+  saveStats(s);
+
+  document.getElementById('surKcal').textContent = kcal;
+  document.getElementById('surMoney').textContent = '¥' + money.toFixed(0);
+  document.getElementById('surStreak').textContent = s.streak;
+
+  cart = {};
+  updateCartBar();
+  show('surprise');
+}
+
+/* ================== 看板 ================== */
+function renderDash() {
+  const s = loadStats();
+  document.getElementById('dashDay').innerHTML = s.streak + ' <small>天</small>';
+  document.getElementById('dashQuote').textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  document.getElementById('dashCount').textContent = s.count;
+  document.getElementById('dashCountSub').textContent = '点外卖没点成的次数';
+  document.getElementById('dashKcal').innerHTML = s.kcal.toLocaleString() + ' <small>千卡</small>';
+  const laps = Math.round(s.kcal / 300);
+  document.getElementById('dashKcalSub').textContent = '≈ 绕操场 ' + laps + ' 圈（按每圈300千卡）';
+  document.getElementById('dashMoney').textContent = '¥' + s.money.toFixed(0);
+  document.getElementById('dashBest').innerHTML = s.best + ' <small>天</small>';
+  document.getElementById('dashActive').textContent = s.days.length;
+
+  const hist = document.getElementById('dashHistory');
+  if (s.history.length === 0) {
+    hist.innerHTML = `<div class="dash-empty"><div class="big">🌱</div>还没有战绩<br>点一次外卖（然后忍住），就会有了</div>`;
+  } else {
+    hist.innerHTML = '';
+    s.history.forEach(h => {
+      const row = document.createElement('div');
+      row.className = 'history-row';
+      row.innerHTML = `<span class="hd">${h.time}</span><span class="ht">${h.text}</span><span class="hc">-${h.kcal}千卡 · ¥${h.money.toFixed(0)}</span>`;
+      hist.appendChild(row);
+    });
+  }
+}
+
+function resetAll() {
+  if (confirm('真的要重置吗？你的意志力战绩就没了 😢')) {
+    try { localStorage.removeItem('wmbhl_stats'); } catch(e) {}
+    toast('已重置。重新开始吧，减肥战士 💪');
+    renderDash();
+  }
+}
+
+/* ================== 提示 ================== */
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+/* ================== 初始化 ================== */
+renderHome();
+updateCartBar();
+</script>
+</body>
+</html>
